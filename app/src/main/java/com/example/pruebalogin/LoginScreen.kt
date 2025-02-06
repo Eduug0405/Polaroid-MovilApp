@@ -59,7 +59,7 @@ fun LoginScreen(
     ) {
         // Logo
         Image(
-            painter = painterResource(id = R.drawable.polaroid), // Asegúrate de que este recurso exista
+            painter = painterResource(id = R.drawable.polaroid),
             contentDescription = "Logo",
             modifier = Modifier
                 .size(180.dp)

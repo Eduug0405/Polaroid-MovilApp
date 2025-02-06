@@ -18,21 +18,18 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             PruebaloginTheme {
-                // Crear el NavController para gestionar la navegación entre pantallas
                 val navController = rememberNavController()
                 NavHost(navController = navController, startDestination = Routes.LOGIN) {
-                    // Pantalla de Login
+
                     composable(Routes.LOGIN) {
                         LoginScreen(
                             onLoginSuccess = {
-                                // Navegar a la pantalla de inicio y limpiar la pila de navegación
                                 navController.navigate(Routes.HOME) {
                                     popUpTo(Routes.LOGIN) { inclusive = true }
                                 }
                             }
                         )
                     }
-                    // Pantalla de Inicio (Home)
                     composable(Routes.HOME) {
                         HomeScreen()
                     }
