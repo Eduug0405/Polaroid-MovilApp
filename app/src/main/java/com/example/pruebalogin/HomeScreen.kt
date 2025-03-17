@@ -21,6 +21,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.material.icons.filled.School
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
@@ -43,23 +44,29 @@ import java.util.Locale
 
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(viewModel: PublicationViewModel = viewModel()) {
-
+fun HomeScreen(
+    viewModel: PublicationViewModel = viewModel(),
+    onStudentScreen: () -> Unit // Lambda para navegar a la pantalla de estudiantes
+) {
     val publicationState by viewModel.publicationState.collectAsState()
-
-
     var showCreateDialog by remember { mutableStateOf(false) }
-
-
     var showCamera by remember { mutableStateOf(false) }
-
-
     val cameraPermissionState: PermissionState =
         rememberPermissionState(permission = Manifest.permission.CAMERA)
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Publicaciones") })
+            TopAppBar(
+                title = { Text("Publicaciones") },
+                actions = {
+                    IconButton(onClick = onStudentScreen) {
+                        Icon(
+                            imageVector = Icons.Filled.School,
+                            contentDescription = "Ir a Estudiantes"
+                        )
+                    }
+                }
+            )
         },
         floatingActionButton = {
             FloatingActionButton(onClick = { showCreateDialog = true }) {
@@ -73,23 +80,18 @@ fun HomeScreen(viewModel: PublicationViewModel = viewModel()) {
                 .padding(paddingValues),
             contentAlignment = Alignment.Center
         ) {
-
             if (showCamera) {
                 if (cameraPermissionState.status.isGranted) {
-
                     CameraPreviewScreen(onCloseCamera = { showCamera = false })
                 } else {
-
                     LaunchedEffect(Unit) {
                         cameraPermissionState.launchPermissionRequest()
                     }
-
                     TextButton(onClick = { showCamera = false }) {
                         Text("Regresar sin cámara")
                     }
                 }
             } else {
-
                 when (publicationState) {
                     is PublicationState.Loading -> {
                         CircularProgressIndicator()
@@ -103,14 +105,13 @@ fun HomeScreen(viewModel: PublicationViewModel = viewModel()) {
                         Text(text = "Error: $message")
                     }
                 }
-
+                // Botón para abrir la cámara
                 Button(
                     onClick = { showCamera = true },
                     modifier = Modifier.align(Alignment.BottomCenter)
                 ) {
                     Text("Abrir Cámara")
                 }
-
                 if (showCreateDialog) {
                     CreatePublicationDialog(
                         onDismiss = { showCreateDialog = false },
@@ -195,7 +196,6 @@ fun PublicationItem(publication: Publication, viewModel: PublicationViewModel) {
                 style = MaterialTheme.typography.labelSmall
             )
         }
-
         if (showEditDialog) {
             EditPublicationDialog(
                 publication = publication,
@@ -210,8 +210,6 @@ fun PublicationItem(publication: Publication, viewModel: PublicationViewModel) {
                 }
             )
         }
-
-        // Diálogo de eliminación
         if (showDeleteDialog) {
             DeletePublicationDialog(
                 onDismiss = { showDeleteDialog = false },
@@ -333,40 +331,22 @@ fun DeletePublicationDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
     )
 }
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CameraPreviewScreen(onCloseCamera: () -> Unit) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-
-
     val previewView = remember { PreviewView(context) }
-
-    val imageCapture by remember {
-        mutableStateOf(
-            ImageCapture.Builder().build()
-        )
-    }
-
-
+    val imageCapture by remember { mutableStateOf(ImageCapture.Builder().build()) }
     val cameraProviderFuture = remember { ProcessCameraProvider.getInstance(context) }
-
-
     var photoPath by remember { mutableStateOf<String?>(null) }
-
 
     LaunchedEffect(Unit) {
         val cameraProvider = cameraProviderFuture.get()
-
-        // Use case de Preview
         val previewUseCase = Preview.Builder().build().apply {
             setSurfaceProvider(previewView.surfaceProvider)
         }
-
-
         val cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
-
         try {
             cameraProvider.unbindAll()
             cameraProvider.bindToLifecycle(
@@ -380,16 +360,11 @@ fun CameraPreviewScreen(onCloseCamera: () -> Unit) {
         }
     }
 
-
     fun takePhoto() {
-
         val outputDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
         val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
             .format(System.currentTimeMillis())
-
         val photoFile = File(outputDir, "IMG_$timeStamp.jpg")
-
-
         val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
 
         imageCapture.takePicture(
@@ -399,7 +374,6 @@ fun CameraPreviewScreen(onCloseCamera: () -> Unit) {
                 override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
                     photoPath = photoFile.absolutePath
                 }
-
                 override fun onError(exception: ImageCaptureException) {
                     exception.printStackTrace()
                 }
@@ -442,14 +416,11 @@ fun CameraPreviewScreen(onCloseCamera: () -> Unit) {
                     modifier = Modifier.fillMaxSize()
                 )
             }
-
-            // mostrar nuestra fotico abajo
             photoPath?.let { path ->
                 Text(
                     text = "Foto Guardada en: $path",
                     style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier
-                        .padding(8.dp)
+                    modifier = Modifier.padding(8.dp)
                 )
                 val painter = rememberAsyncImagePainter(path)
                 Image(
